@@ -7,16 +7,23 @@ class InputEmbeddings(nn.Module):
     def __init__(self, d_model: int, vocab_size: int):
         super().__init__()
         # TODO: Определить слой эмбеддингов
-        pass
+        self.d_model = d_model
+        self.vocab_size = vocab_size
+        self.embedding = nn.Embedding(vocab_size, d_model)
 
     def forward(self, x):
         # TODO: Реализовать логику
-        pass
+        return self.embedding(x) * math.sqrt(self.d_model)
 
 class PositionalEncoding(nn.Module):
     """Добавляет информацию о порядке слов."""
     def __init__(self, d_model: int, seq_len: int, dropout: float):
         super().__init__()
+        self.d_model = d_model
+        self.seq_len = seq_len
+        self.dropout = dropout
+        self.pe = torch.zeros(seq_len, d_model)
+        
         # TODO: Создать матрицу позиционных кодировок
         pass
 
