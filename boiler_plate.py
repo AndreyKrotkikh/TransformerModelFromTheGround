@@ -123,7 +123,6 @@ class EncoderLayer(nn.Module):
         x = self.ffn_norm(x + self.dropout(self.ffn(x)))
         return x
 
-
 class Encoder(nn.Module):
     def __init__(self, vocab_size: int, d_model: int, seq_len: int, dropout: float, h: int, d_ff: int, n_layers: int):
         super().__init__()
@@ -142,7 +141,6 @@ class Encoder(nn.Module):
         x = self.norm(x)
         return x
     
-
 class DecoderLayer(nn.Module):
     def __init__(self, d_model: int, h: int, d_ff: int, dropout: float):
         super().__init__()
@@ -220,3 +218,56 @@ class Transformer(nn.Module):
         encoder_output = self.encode(src, src_mask)
         decoder_output = self.decode(encoder_output, src_mask, tgt, tgt_mask)
         return self.project(decoder_output)
+  
+vocab_size = 10000
+d_model = 512
+seq_len = 100
+dropout = 0.1
+h = 8
+d_ff = 2048
+n_layers = 6
+model = Transformer(Encoder(vocab_size, d_model, seq_len, dropout, h, d_ff, n_layers), Decoder(vocab_size, d_model, seq_len, dropout, h, d_ff, n_layers), InputEmbeddings(d_model, vocab_size), InputEmbeddings(d_model, vocab_size), PositionalEncoding(d_model, seq_len, dropout), PositionalEncoding(d_model, seq_len, dropout), d_model, vocab_size)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+criterion = nn.CrossEntropyLoss()
+
+def train_epoch(model, dataloader, optimizer, criterion, device):
+    model.train() # Переводим модель в режим обучения (важно для Dropout)
+    total_loss = 0
+
+    for batch in dataloader:
+        # 1. Переносим данные на GPU/CPU
+        src = batch['src'].to(device)
+        tgt = batch['tgt'].to(device)
+        src_mask = batch['src_mask'].to(device)
+        
+        # 2. Подготовка входа и целей (Teacher Forcing)
+        # Предполагаем, что tgt: [<sos>, Word1, Word2, <eos>]
+        
+        decoder_input = tgt[:, :-1] # Убираем последний токен (<eos>)
+        labels = tgt[:, 1:]         # Убираем первый токен (<sos>)
+
+        # Важно: маска для декодера должна соответствовать новой длине (seq_len - 1)
+        # Обычно её пересоздают здесь или обрезают batch['tgt_mask']
+        tgt_mask = batch['tgt_mask'][:, :-1, :-1].to(device) 
+
+        # 3. Сброс градиентов
+        optimizer.zero_grad()
+
+        # 4. Прямой проход (Forward pass)
+        # Получаем логиты: [batch_size, seq_len-1, vocab_size]
+        output = model(src, decoder_input, src_mask, tgt_mask)
+
+        # 5. Вычисление ошибки
+        # CrossEntropyLoss требует плоский ввод: (N, C) и (N)
+        # output.reshape(-1, vocab_size) -> [batch * (seq_len-1), vocab_size]
+        # labels.reshape(-1) -> [batch * (seq_len-1)]
+        loss = criterion(output.reshape(-1, output.shape[-1]), labels.reshape(-1))
+
+        # 6. Обратный проход и шаг оптимизатора
+        loss.backward()
+        optimizer.step()
+
+        total_loss += loss.item()
+
+    return total_loss / len(dataloader)
+    
