@@ -33,7 +33,8 @@ class PositionalEncoding(nn.Module):
 
     def forward(self, x):
         # TODO: Сложить x и позиционные кодировки
-        pass
+        x = self.dropout(x + self.pe[:x.size(1)])
+        return x
 
 class MultiHeadAttention(nn.Module):
     """Механизм многоголового внимания."""
