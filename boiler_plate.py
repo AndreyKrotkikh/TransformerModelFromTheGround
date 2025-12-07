@@ -67,7 +67,8 @@ class MultiHeadAttention(nn.Module):
         attn_probs = self.dropout(attn_probs) # [batch_size, h, seq_len, seq_len]
         output = torch.matmul(attn_probs, v) # [batch_size, h, seq_len, seq_len] * [batch_size, h, seq_len, d_k] -> [batch_size, h, seq_len, d_k]
         output = output.transpose(1, 2) # [batch_size, h, seq_len, d_k] -> [batch_size, seq_len, h, d_k]
-        output = output.contiguous() # Изначально: Когда ты создаешь тензор, PyTorch аккуратно укладывает числа в памяти друг за другом. Это contiguous (непрерывный) тензор.
+        output = output.contiguous() 
+        # Изначально: Когда ты создаешь тензор, PyTorch аккуратно укладывает числа в памяти друг за другом. Это contiguous (непрерывный) тензор.
         # Transpose: Когда ты делаешь .transpose(1, 2), PyTorch — хитрец. Он не перемещает числа в памяти (это было бы долго). Он просто меняет "правила чтения" (метаданные/strides).
         # Логически тензор повернут.
         # Физически числа лежат в памяти в старом порядке.
