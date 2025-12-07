@@ -165,4 +165,53 @@ class DecoderLayer(nn.Module):
 
     def forward(self, x, encoder_output, src_mask, tgt_mask):
         # TODO: Реализовать поток данных через 3 подслоя
-        pass
+        x = self.attn_norm(x + self.dropout(self.attn(x, x, x, tgt_mask)))
+        x = self.cross_attn_norm(x + self.dropout(self.cross_attn(x, encoder_output, encoder_output, src_mask)))
+        x = self.ffn_norm(x + self.dropout(self.ffn(x)))
+        return x
+    
+class Decoder(nn.Module):
+    def __init__(self, vocab_size: int, d_model: int, seq_len: int, dropout: float, h: int, d_ff: int, n_layers: int):
+        super().__init__()
+        # TODO: Инициализация (Embed, PE, Layers, Norm)
+        self.embed = InputEmbeddings(d_model, vocab_size)
+        self.pe = PositionalEncoding(d_model, seq_len, dropout)
+        self.layers = nn.ModuleList([DecoderLayer(d_model, h, d_ff, dropout) for _ in range(n_layers)])
+        self.norm = nn.LayerNorm(d_model)
+
+    def forward(self, x, encoder_output, src_mask, tgt_mask):
+        # TODO: Embed -> PE -> Loop over layers -> Norm
+        x = self.embed(x)
+        x = self.pe(x)
+        for layer in self.layers:
+            x = layer(x, encoder_output, src_mask, tgt_mask)
+        x = self.norm(x)
+        return x
+    
+class Transformer(nn.Module):
+    def __init__(
+        self, 
+        encoder: Encoder, 
+        decoder: Decoder, 
+        d_model: int, 
+        vocab_size: int
+    ):
+        # TODO: Сохранить компоненты и создать Projection Layer
+        super().__init__()
+        self.encoder = encoder
+        self.decoder = decoder
+        self.src_embed = InputEmbeddings(d_model, vocab_size)
+        self.tgt_embed = InputEmbeddings(d_model, vocab_size)
+        self.projection = nn.Linear(d_model, vocab_size)
+
+    def encode(self, src, src_mask):
+        # TODO: Вспомогательный метод для энкодера
+        return self.encoder(src, src_mask)
+
+    def decode(self, encoder_output, src_mask, tgt, tgt_mask):
+        # TODO: Вспомогательный метод для декодера
+        return self.decoder(tgt, encoder_output, src_mask, tgt_mask)
+
+    def project(self, x):
+        # TODO: Вспомогательный метод для проекции
+        return self.projection(x)
