@@ -107,10 +107,37 @@ class EncoderLayer(nn.Module):
         # 2. Один слой FeedForward
         # 3. Два слоя LayerNorm (один для attention, один для FFN)
         # 4. Слой Dropout (для применения перед сложением)
-        pass
+        self.attn = MultiHeadAttention(d_model, h, dropout)
+        self.ffn = FeedForward(d_model, d_ff, dropout)
+        self.attn_norm = nn.LayerNorm(d_model)
+        self.ffn_norm = nn.LayerNorm(d_model)
+        self.dropout = nn.Dropout(dropout)
+        self.d_model = d_model
+
 
     def forward(self, x, mask):
         # TODO: Реализовать проход данных
         # x -> Attention -> Dropout -> Add (к x) -> Norm
         # -> FeedForward -> Dropout -> Add (к результату) -> Norm
-        pass
+        x = self.attn_norm(x + self.dropout(self.attn(x, x, x, mask)))
+        x = self.ffn_norm(x + self.dropout(self.ffn(x)))
+        return x
+
+
+class Encoder(nn.Module):
+    def __init__(self, vocab_size: int, d_model: int, seq_len: int, dropout: float, h: int, d_ff: int, n_layers: int):
+        super().__init__()
+        # TODO: Инициализация компонентов
+        self.embed = InputEmbeddings(d_model, vocab_size)
+        self.pe = PositionalEncoding(d_model, seq_len, dropout)
+        self.layers = nn.ModuleList([EncoderLayer(d_model, h, d_ff, dropout) for _ in range(n_layers)])
+        self.norm = nn.LayerNorm(d_model)
+
+    def forward(self, x, mask):
+        # TODO: Проход через Embed -> PE -> Layers -> Norm
+        x = self.embed(x)
+        x = self.pe(x)
+        for layer in self.layers:
+            x = layer(x, mask)
+        x = self.norm(x)
+        return x
