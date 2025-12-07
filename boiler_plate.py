@@ -98,3 +98,19 @@ class FeedForward(nn.Module):
         return output
 
 # Далее пойдут сборные блоки: EncoderLayer, DecoderLayer, Transformer
+
+class EncoderLayer(nn.Module):
+    def __init__(self, d_model: int, h: int, d_ff: int, dropout: float):
+        super().__init__()
+        # TODO: Инициализировать:
+        # 1. Один слой MultiHeadAttention
+        # 2. Один слой FeedForward
+        # 3. Два слоя LayerNorm (один для attention, один для FFN)
+        # 4. Слой Dropout (для применения перед сложением)
+        pass
+
+    def forward(self, x, mask):
+        # TODO: Реализовать проход данных
+        # x -> Attention -> Dropout -> Add (к x) -> Norm
+        # -> FeedForward -> Dropout -> Add (к результату) -> Norm
+        pass
