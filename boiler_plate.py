@@ -190,19 +190,19 @@ class Decoder(nn.Module):
     
 class Transformer(nn.Module):
     def __init__(
-        self, 
-        encoder: Encoder, 
-        decoder: Decoder, 
-        d_model: int, 
-        vocab_size: int
+        self, encoder: Encoder, decoder: Decoder, src_embed: InputEmbeddings, tgt_embed: InputEmbeddings, src_pe: PositionalEncoding, tgt_pe: PositionalEncoding, d_model: int, vocab_size: int
     ):
-        # TODO: Сохранить компоненты и создать Projection Layer
         super().__init__()
         self.encoder = encoder
         self.decoder = decoder
-        self.src_embed = InputEmbeddings(d_model, vocab_size)
-        self.tgt_embed = InputEmbeddings(d_model, vocab_size)
+        self.src_embed = src_embed
+        self.tgt_embed = tgt_embed
+        self.src_pe = src_pe
+        self.tgt_pe = tgt_pe
+        self.d_model = d_model
+        self.vocab_size = vocab_size
         self.projection = nn.Linear(d_model, vocab_size)
+        # TODO: Сохранить компоненты и создать Projection Layer
 
     def encode(self, src, src_mask):
         # TODO: Вспомогательный метод для энкодера
@@ -215,3 +215,8 @@ class Transformer(nn.Module):
     def project(self, x):
         # TODO: Вспомогательный метод для проекции
         return self.projection(x)
+    
+    def forward(self, src, tgt, src_mask, tgt_mask):
+        encoder_output = self.encode(src, src_mask)
+        decoder_output = self.decode(encoder_output, src_mask, tgt, tgt_mask)
+        return self.project(decoder_output)
