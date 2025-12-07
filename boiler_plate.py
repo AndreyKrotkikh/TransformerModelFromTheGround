@@ -83,9 +83,18 @@ class FeedForward(nn.Module):
     def __init__(self, d_model: int, d_ff: int, dropout: float):
         super().__init__()
         # TODO: Два линейных слоя и активация
-        pass
+        self.d_model = d_model
+        self.d_ff = d_ff
+        self.dropout = nn.Dropout(dropout)
+        self.W_1 = nn.Linear(d_model, d_ff)
+        self.W_2 = nn.Linear(d_ff, d_model)
+        self.activation = nn.ReLU()
 
     def forward(self, x):
-        pass
+        output = self.W_1(x)
+        output = self.activation(output)
+        output = self.dropout(output)
+        output = self.W_2(output)
+        return output
 
 # Далее пойдут сборные блоки: EncoderLayer, DecoderLayer, Transformer
