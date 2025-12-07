@@ -18,14 +18,18 @@ class InputEmbeddings(nn.Module):
 class PositionalEncoding(nn.Module):
     """Добавляет информацию о порядке слов."""
     def __init__(self, d_model: int, seq_len: int, dropout: float):
+        # TODO: Создать матрицу позиционных кодировок
         super().__init__()
         self.d_model = d_model
         self.seq_len = seq_len
-        self.dropout = dropout
-        self.pe = torch.zeros(seq_len, d_model)
+        self.dropout = nn.Dropout(dropout)
+        pe = torch.zeros(seq_len, d_model)
+        position = torch.arange(0, seq_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * -(math.log(10000.0) / d_model))
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        self.register_buffer('pe', pe)
         
-        # TODO: Создать матрицу позиционных кодировок
-        pass
 
     def forward(self, x):
         # TODO: Сложить x и позиционные кодировки
