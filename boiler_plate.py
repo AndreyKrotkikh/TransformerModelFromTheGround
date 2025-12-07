@@ -141,3 +141,28 @@ class Encoder(nn.Module):
             x = layer(x, mask)
         x = self.norm(x)
         return x
+    
+
+class DecoderLayer(nn.Module):
+    def __init__(self, d_model: int, h: int, d_ff: int, dropout: float):
+        super().__init__()
+        # TODO: Инициализировать:
+        # 1. Self-Attention (с маской)
+        # 2. Cross-Attention (источник K, V извне)
+        # 3. FeedForward
+        # 4. Три слоя LayerNorm
+        # 5. Три слоя Dropout
+        self.d_model = d_model
+        self.h = h
+        self.d_ff = d_ff
+        self.dropout = nn.Dropout(dropout)
+        self.attn = MultiHeadAttention(d_model, h, dropout)
+        self.cross_attn = MultiHeadAttention(d_model, h, dropout)
+        self.ffn = FeedForward(d_model, d_ff, dropout)
+        self.attn_norm = nn.LayerNorm(d_model)
+        self.cross_attn_norm = nn.LayerNorm(d_model)
+        self.ffn_norm = nn.LayerNorm(d_model)
+
+    def forward(self, x, encoder_output, src_mask, tgt_mask):
+        # TODO: Реализовать поток данных через 3 подслоя
+        pass
